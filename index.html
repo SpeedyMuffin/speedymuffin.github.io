@@ -128,13 +128,13 @@
   .menu button:nth-child(4) { --shift: 56px; }
   .menu button:nth-child(5) { --shift: 24px; }
   .menu button:nth-child(6) { --shift: 70px; }
-  .menu button .label { position: relative; z-index: 2; }
+  .menu button .label { position: relative; z-index: 2; display: inline-block; }
   .menu button::before {
     content: ""; position: absolute; inset: 4px -8px 2px -6px; z-index: 1;
     background: var(--paper);
     clip-path: polygon(0 18%, 100% 0, 96% 100%, 4% 86%);
     transform: scaleX(0); transform-origin: left center;
-    transition: transform .16s ease;
+    transition: transform .24s cubic-bezier(.2,1.5,.4,1);
   }
   .menu button::after {
     content: attr(data-label); position: absolute; left: 20px; top: 6px; z-index: 0;
@@ -277,6 +277,48 @@
   @keyframes blink { 50% { opacity: .55; } }
   .skip { position: absolute; z-index: 1; right: max(18px, env(safe-area-inset-right, 0px)); bottom: calc(18px + env(safe-area-inset-bottom, 0px)); font-family: var(--cond); font-weight: 600; font-size: 14px; letter-spacing: .1em; text-transform: uppercase; color: var(--paper); opacity: .8; }
 
+  /* --- Hareketli arka plan --- */
+  .bg::before { animation: drift 26s linear infinite; }
+  @keyframes drift { to { background-position: 140px 140px; } }
+  .shard.s2 { animation: float 9s ease-in-out infinite alternate; }
+  .shard.s3 { animation: float 7s ease-in-out infinite alternate-reverse; }
+  @keyframes float { to { transform: translate(-16px, 20px) rotate(2deg); } }
+
+  /* --- Seçili menü: zıplayan ok imleci + seçilince sıçrama --- */
+  .menu button .label::before {
+    content: ""; position: absolute; left: -34px; top: 50%;
+    width: 24px; height: 28px; margin-top: -14px;
+    background: var(--paper);
+    clip-path: polygon(0 0, 100% 50%, 0 100%, 28% 50%);
+    opacity: 0; transform: translateX(-12px);
+    transition: opacity .15s ease, transform .15s ease;
+  }
+  .menu button[aria-selected="true"] .label::before { opacity: 1; transform: none; animation: nudge .8s ease-in-out infinite; }
+  @keyframes nudge { 50% { transform: translateX(7px); } }
+  .menu button.pop .label { display: inline-block; animation: pop .34s cubic-bezier(.2,1.6,.4,1); }
+  @keyframes pop { 0% { transform: scale(1.28) rotate(-5deg); } 100% { transform: none; } }
+
+  /* --- Bölüm geçişi: ekranı çapraz kesen siyah / kırmızı / beyaz bantlar --- */
+  .wipe { position: fixed; inset: 0; z-index: 25; pointer-events: none; overflow: hidden; }
+  .wipe i { position: absolute; top: -20%; height: 140%; left: -95%; transform: skewX(-18deg); }
+  .wipe i:nth-child(1) { width: 80%; background: var(--ink); }
+  .wipe i:nth-child(2) { width: 26%; background: var(--red); }
+  .wipe i:nth-child(3) { width: 3%; background: var(--paper); }
+  .wipe.run i { animation: sweep .62s cubic-bezier(.75,0,.25,1) forwards; }
+  .wipe.run i:nth-child(2) { animation-delay: .07s; }
+  .wipe.run i:nth-child(3) { animation-delay: .12s; }
+  @keyframes sweep { from { left: -95%; } to { left: 145%; } }
+
+  /* Panel içeriği kademeli kayarak gelir */
+  .panel.enter > * { animation: inR .44s cubic-bezier(.2,.9,.3,1.15) both; animation-delay: calc(var(--i, 0) * 60ms + 60ms); }
+  @keyframes inR { from { opacity: 0; transform: translateX(48px) skewX(-8deg); } to { opacity: 1; transform: none; } }
+
+  /* Giriş ekranı çapraz kesilerek kapanır */
+  .intro { clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); }
+  .intro.leaving { pointer-events: none; animation: introOut .6s cubic-bezier(.7,0,.3,1) forwards; }
+  .intro.leaving .intro-inner { transition: transform .6s cubic-bezier(.7,0,.3,1); transform: rotate(-6deg) translateX(40vw) scale(1.25); }
+  @keyframes introOut { to { clip-path: polygon(135% 0, 135% 0, 100% 100%, 100% 100%); } }
+
   @media (max-width: 860px) {
     .stage { grid-template-columns: minmax(0, 1fr); grid-template-areas: "title" "menu" "panel"; gap: 18px; }
     .hint { display: none; }
@@ -292,6 +334,8 @@
   }
   @media (prefers-reduced-motion: reduce) {
     .panel, .intro::before, .intro::after, .intro .ransom, .press { animation: none; }
+    .bg::before, .shard, .panel.enter > *, .menu button.pop .label, .menu button[aria-selected="true"] .label::before { animation: none !important; }
+    .wipe { display: none; }
     .menu button, .menu button::before { transition: none; }
     .music[aria-pressed="true"] .bars i { animation: none; height: 12px; }
   }
@@ -391,7 +435,7 @@
       <p class="meta"><span class="i18n" lang="tr">Konak, İzmir · İzmir Bölge Ekibi · Şub 2024 – Halen</span><span class="i18n" lang="en">Konak, Izmir · Izmir Regional Team · Feb 2024 – Present</span></p>
       <div class="timeline i18n" lang="tr">
         <div class="job">
-          <div class="job-head"><h3>Software Support Specialist</h3><span class="meta">Kas 2024 – Halen</span></div>
+          <div class="job-head"><h3 lang="en">Software Support Specialist</h3><span class="meta">Kas 2024 – Halen</span></div>
           <ul>
             <li>Probel HBYS kullanan sağlık kurumlarına uygulama desteği: hata analizi, veri düzeltme, kullanıcı yönlendirme.</li>
             <li>Oracle SQL ve PL/SQL ile sorun analizi; Oracle Forms tabanlı modüllerde destek.</li>
@@ -433,13 +477,13 @@
       <h2><span class="i18n" lang="tr">Kendi yazdıklarım</span><span class="i18n" lang="en">Things I built</span></h2>
       <div class="projects">
         <article class="project">
-          <div class="job-head"><h3>OtoProgram</h3><span class="meta">C# · WPF · .NET 8 · <span class="i18n" lang="tr">Oca – Ağu 2026</span><span class="i18n" lang="en">Jan – Aug 2026</span></span></div>
+          <div class="job-head"><h3>OtoProgram</h3><span class="meta"><span lang="en">C# · WPF · .NET 8</span> · <span class="i18n" lang="tr">Oca – Ağu 2026</span><span class="i18n" lang="en">Jan – Aug 2026</span></span></div>
           <p class="i18n" lang="tr">Format sonrası programları kurup bilgisayarı domaine alan basit bir araç olarak başladı. Zamanla Active Directory kullanıcı işlemleri, WMI ile uzak donanım ve servis bilgisi, uzak süreç yönetimi, profil yedekleme, ağ içi sohbet ve IP bloklarına duyuru modülleri eklendi. Ağa bağlı olmadan denenebilen bir demo modu var.</p>
           <p class="i18n" lang="en">It started as a simple tool that installs software after a reformat and joins the machine to the domain. Over time it gained Active Directory user tasks, remote hardware and service info over WMI, remote process management, profile backup, LAN chat and announcements to IP ranges. A demo mode lets you try it without a network.</p>
           <div class="links"><a href="https://github.com/speedymuffin/OtoProgram" target="_blank" rel="noopener"><span class="i18n" lang="tr">GitHub'da kaynak kodu</span><span class="i18n" lang="en">Source code on GitHub</span></a></div>
         </article>
         <article class="project">
-          <div class="job-head"><h3><span class="i18n" lang="tr">Otonom video üretim hattı</span><span class="i18n" lang="en">Autonomous video pipeline</span></h3><span class="meta">Python · FFmpeg · Gemini · <span class="i18n" lang="tr">Eyl 2026 – Halen</span><span class="i18n" lang="en">Sep 2026 – Present</span></span></div>
+          <div class="job-head"><h3><span class="i18n" lang="tr">Otonom video üretim hattı</span><span class="i18n" lang="en">Autonomous video pipeline</span></h3><span class="meta"><span lang="en">Python · FFmpeg · Gemini</span> · <span class="i18n" lang="tr">Eyl 2026 – Halen</span><span class="i18n" lang="en">Sep 2026 – Present</span></span></div>
           <p class="i18n" lang="tr"><span class="figure">100+</span> video, üç YouTube kanalında. Senaryo, seslendirme, stok görüntü, FFmpeg kurgu, kelime bazlı altyazı ve kapak otomatik üretiliyor. Her video önce Telegram'a önizleme olarak düşüyor; onayla ya da 30 dakika sonra kendiliğinden YouTube ve Instagram'a yükleniyor. Oracle Cloud'daki Linux sunucumda systemd servisleri olarak 7/24 çalışıyor.</p>
           <p class="i18n" lang="en"><span class="figure">100+</span> videos across three YouTube channels. Script, voice-over, stock footage, FFmpeg editing, word-level subtitles and thumbnails are produced automatically. Each video first arrives on Telegram as a preview; on approval, or automatically after 30 minutes, it is uploaded to YouTube and Instagram. It runs 24/7 as systemd services on my Linux server on Oracle Cloud.</p>
           <div class="links">
@@ -448,7 +492,7 @@
           </div>
         </article>
         <article class="project">
-          <div class="job-head"><h3><span class="i18n" lang="tr">İş ilanı değerlendirme ajanı</span><span class="i18n" lang="en">Job listing evaluation agent</span></h3><span class="meta">Python · Gemini · Pydantic · <span class="i18n" lang="tr">Eyl 2026 – Halen</span><span class="i18n" lang="en">Sep 2026 – Present</span></span></div>
+          <div class="job-head"><h3><span class="i18n" lang="tr">İş ilanı değerlendirme ajanı</span><span class="i18n" lang="en">Job listing evaluation agent</span></h3><span class="meta"><span lang="en">Python · Gemini · Pydantic</span> · <span class="i18n" lang="tr">Eyl 2026 – Halen</span><span class="i18n" lang="en">Sep 2026 – Present</span></span></div>
           <p class="i18n" lang="tr">Kariyer.net ve LinkedIn ilanlarını toplu değerlendirip çıktıyı Pydantic şemasıyla doğrulayan, Gemini yanıt vermediğinde ilanları sonraki tura bırakan, uygun ilanları hazır ön yazıyla Telegram'a getiren ajan. Filtreleri 18 birim testiyle korunuyor.</p>
           <p class="i18n" lang="en">An agent that scores Kariyer.net and LinkedIn listings in batches, validates the output with a Pydantic schema, defers listings to the next round when Gemini does not answer, and brings matching jobs to Telegram with a ready cover note. Its filters are covered by 18 unit tests.</p>
         </article>
@@ -460,15 +504,15 @@
       <span class="tag"><span class="i18n" lang="tr">Yetenekler</span><span class="i18n" lang="en">Skills</span></span>
       <h2><span class="i18n" lang="tr">Elimdeki aletler</span><span class="i18n" lang="en">My toolkit</span></h2>
       <h3><span class="i18n" lang="tr">Veri tabanı</span><span class="i18n" lang="en">Database</span></h3>
-      <div class="chips"><span class="chip">Oracle SQL</span><span class="chip">PL/SQL</span><span class="chip">Oracle Forms</span><span class="chip">SQL Developer</span><span class="chip alt">SQLite</span></div>
+      <div class="chips"><span class="chip" lang="en">Oracle SQL</span><span class="chip" lang="en">PL/SQL</span><span class="chip" lang="en">Oracle Forms</span><span class="chip" lang="en">SQL Developer</span><span class="chip alt" lang="en">SQLite</span></div>
       <h3><span class="i18n" lang="tr">Yazılım</span><span class="i18n" lang="en">Software</span></h3>
-      <div class="chips"><span class="chip">C#</span><span class="chip">WPF / XAML</span><span class="chip">.NET 8</span><span class="chip">Python</span><span class="chip alt"><span class="i18n" lang="tr">Temel C++</span><span class="i18n" lang="en">Basic C++</span></span></div>
+      <div class="chips"><span class="chip" lang="en">C#</span><span class="chip" lang="en">WPF / XAML</span><span class="chip" lang="en">.NET 8</span><span class="chip" lang="en">Python</span><span class="chip alt" lang="en"><span class="i18n" lang="tr">Temel C++</span><span class="i18n" lang="en">Basic C++</span></span></div>
       <h3><span class="i18n" lang="tr">Sistem ve ağ</span><span class="i18n" lang="en">Systems &amp; network</span></h3>
-      <div class="chips"><span class="chip">Active Directory</span><span class="chip">WMI</span><span class="chip">PowerShell</span><span class="chip"><span class="i18n" lang="tr">Windows Servisleri</span><span class="i18n" lang="en">Windows Services</span></span><span class="chip alt"><span class="i18n" lang="tr">IP / Ağ</span><span class="i18n" lang="en">IP / Networking</span></span></div>
+      <div class="chips"><span class="chip" lang="en">Active Directory</span><span class="chip" lang="en">WMI</span><span class="chip" lang="en">PowerShell</span><span class="chip" lang="en"><span class="i18n" lang="tr">Windows Servisleri</span><span class="i18n" lang="en">Windows Services</span></span><span class="chip alt" lang="en"><span class="i18n" lang="tr">IP / Ağ</span><span class="i18n" lang="en">IP / Networking</span></span></div>
       <h3><span class="i18n" lang="tr">Linux ve bulut</span><span class="i18n" lang="en">Linux &amp; cloud</span></h3>
-      <div class="chips"><span class="chip">Ubuntu</span><span class="chip">systemd</span><span class="chip">Nginx</span><span class="chip">Cloudflare</span><span class="chip">Oracle Cloud</span><span class="chip alt">Git</span></div>
+      <div class="chips"><span class="chip" lang="en">Ubuntu</span><span class="chip" lang="en">systemd</span><span class="chip" lang="en">Nginx</span><span class="chip" lang="en">Cloudflare</span><span class="chip" lang="en">Oracle Cloud</span><span class="chip alt" lang="en">Git</span></div>
       <h3><span class="i18n" lang="tr">Yapay zeka</span><span class="i18n" lang="en">AI</span></h3>
-      <div class="chips"><span class="chip">Gemini API</span><span class="chip">faster-whisper</span><span class="chip alt">TTS</span></div>
+      <div class="chips"><span class="chip" lang="en">Gemini API</span><span class="chip" lang="en">faster-whisper</span><span class="chip alt" lang="en">TTS</span></div>
     </section>
 
     <!-- EĞİTİM -->
@@ -522,6 +566,8 @@
     </section>
   </div>
 </div>
+
+<div class="wipe" id="wipe" aria-hidden="true"><i></i><i></i><i></i></div>
 
 <button class="music" id="music" type="button" aria-pressed="false">
   <span class="bars" aria-hidden="true"><i></i><i></i><i></i></span>
@@ -653,6 +699,18 @@ var Theme = (function () {
       master.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.3);
       setTimeout(function () { if (!playing) clearInterval(timer); }, 350);
     },
+    // Menü ses efektleri: yalnızca müzik açıkken (ziyaretçi sesi açmışken) çalar
+    sfx: function (kind) {
+      if (!ctx || !playing) return;
+      var t = ctx.currentTime;
+      var seq = kind === 'open' ? [[86, 0], [93, 0.055]] : [[81, 0]];
+      seq.forEach(function (n) {
+        var o = ctx.createOscillator(), g = ctx.createGain();
+        o.type = 'square'; o.frequency.value = hz(n[0]);
+        env(g, t + n[1], 0.004, 0.07, 0.07);
+        o.connect(g); g.connect(master); o.start(t + n[1]); o.stop(t + n[1] + 0.1);
+      });
+    },
     get playing() { return playing; }
   };
 })();
@@ -682,28 +740,50 @@ var Theme = (function () {
   setLang(saved || ((navigator.language || 'tr').toLowerCase().indexOf('tr') === 0 ? 'tr' : 'en'));
 
   /* --- Menü sekmeleri --- */
-  function open(id, focus) {
+  var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var wipe = document.getElementById('wipe');
+  var current = null, swapTimer = null;
+
+  function revealPanel(p) {
+    // Panelin çocuklarına sıra numarası verip kademeli giriş animasyonunu başlat
+    Array.prototype.forEach.call(p.children, function (c, i) { c.style.setProperty('--i', i); });
+    p.classList.remove('enter'); void p.offsetWidth; p.classList.add('enter');
+    p.style.animation = 'none'; void p.offsetWidth; p.style.animation = '';
+  }
+  function showPanel(id) {
+    panels.forEach(function (p) {
+      if (p.id === id) { p.hidden = false; revealPanel(p); }
+      else { p.hidden = true; p.classList.remove('enter'); }
+    });
+  }
+  function open(id, focus, animate) {
     if (ids.indexOf(id) === -1) id = 'profil';
+    if (id === current) { if (focus) tabs[ids.indexOf(id)].focus(); return; }
+    current = id;
     tabs.forEach(function (t) {
       var on = t.getAttribute('aria-controls') === id;
       t.setAttribute('aria-selected', on ? 'true' : 'false');
       t.tabIndex = on ? 0 : -1;
+      if (on) { t.classList.remove('pop'); void t.offsetWidth; t.classList.add('pop'); }
       if (on && focus) t.focus();
     });
-    panels.forEach(function (p) {
-      var on = p.id === id;
-      if (on && p.hidden) { p.hidden = false; p.style.animation = 'none'; void p.offsetWidth; p.style.animation = ''; }
-      else if (!on) { p.hidden = true; }
-    });
+    clearTimeout(swapTimer);
+    if (animate && !reduced) {
+      // Bantlar ekranın ortasını kapattığı anda içerik değişir
+      wipe.classList.remove('run'); void wipe.offsetWidth; wipe.classList.add('run');
+      swapTimer = setTimeout(function () { showPanel(id); }, 270);
+    } else {
+      showPanel(id);
+    }
     if (location.hash !== '#' + id) { try { history.replaceState(null, '', '#' + id); } catch (e) {} }
   }
   tabs.forEach(function (t, i) {
-    t.addEventListener('click', function () { open(t.getAttribute('aria-controls')); });
+    t.addEventListener('click', function () { Theme.sfx('open'); open(t.getAttribute('aria-controls'), false, true); });
     t.addEventListener('keydown', function (e) {
       var next = null;
       if (e.key === 'ArrowDown' || e.key === 'ArrowRight') next = tabs[(i + 1) % tabs.length];
       if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') next = tabs[(i - 1 + tabs.length) % tabs.length];
-      if (next) { e.preventDefault(); open(next.getAttribute('aria-controls'), true); }
+      if (next) { e.preventDefault(); Theme.sfx('move'); open(next.getAttribute('aria-controls'), true, true); }
     });
   });
 
@@ -721,32 +801,49 @@ var Theme = (function () {
   });
 
   /* --- Müzik --- */
+  var userMuted = false;  // ziyaretçi müziği düğmeyle kapattıysa bir daha kendiliğinden başlamaz
   function setMusic(on) {
     try { on ? Theme.start() : Theme.stop(); } catch (e) { on = false; }
     musicBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
   }
-  musicBtn.addEventListener('click', function () { setMusic(!Theme.playing); });
+  musicBtn.addEventListener('click', function () {
+    var on = !Theme.playing;
+    userMuted = !on;
+    setMusic(on);
+  });
+
+  // Tarayıcılar sesi ancak bir kullanıcı etkileşiminden sonra başlatır. Giriş ekranı kalkmış olsa
+  // bile sayfadaki ilk tıklama / dokunma / tuş basışı müziği başlatır (müzik düğmesi hariç).
+  function firstGesture(e) {
+    if (e.target && e.target.closest && e.target.closest('.music')) return;
+    document.removeEventListener('pointerdown', firstGesture, true);
+    document.removeEventListener('keydown', firstGesture, true);
+    if (!userMuted && !Theme.playing) setMusic(true);
+  }
+  document.addEventListener('pointerdown', firstGesture, true);
+  document.addEventListener('keydown', firstGesture, true);
 
   /* --- Giriş ekranı --- */
-  var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  function closeIntro(withMusic) {
-    if (intro.hidden) return;
-    intro.hidden = true;
-    if (withMusic) setMusic(true);
+  function closeIntro() {
+    if (intro.hidden || intro.classList.contains('leaving')) return;
     var sel = tabs.filter(function (t) { return t.getAttribute('aria-selected') === 'true'; })[0];
     if (sel) sel.focus({ preventScroll: true });
+    if (reduced) { intro.hidden = true; return; }
+    intro.classList.add('leaving');
+    setTimeout(function () { intro.hidden = true; }, 620);
+    var p = document.getElementById(current);
+    if (p) setTimeout(function () { revealPanel(p); }, 220);
   }
   var startHash = (location.hash || '').replace('#', '');
+  open(startHash || 'profil', false, false);
   if (reduced || ids.indexOf(startHash) > 0) {
     intro.hidden = true;  // bir bölüme doğrudan bağlantıyla gelenler giriş ekranını görmez
   } else {
-    intro.addEventListener('click', function () { closeIntro(true); });
-    intro.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); closeIntro(true); } });
-    setTimeout(function () { closeIntro(false); }, 4500);  // tıklanmazsa sessizce kalkar
+    intro.addEventListener('click', closeIntro);
+    intro.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); closeIntro(); } });
+    setTimeout(closeIntro, 6000);  // tıklanmazsa kendiliğinden kalkar; müzik ilk tıklamada başlar
     intro.focus({ preventScroll: true });
   }
-
-  open(startHash || 'profil');
 })();
 </script>
 
